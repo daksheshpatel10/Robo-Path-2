@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Robo Path 2">
+<title>Robo Path 2</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#cdeeff;--panel:#fff;--tile:#e8f7ee;--tile2:#d5f0e0;--ink:#1d2b4f;--wall:#8c93a8;--up:#3b82f6;--down:#8b5cf6;--left:#f59e0b;--right:#10b981;--rep:#ec4899;--go:#22c55e;--chip:#f1f5ff;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101c3a;--panel:#1b2a52;--tile:#23406a;--tile2:#1f3860;--ink:#f2f6ff;--wall:#5b6482;--chip:#26375f}}
+:root[data-theme="dark"]{--bg:#101c3a;--panel:#1b2a52;--tile:#23406a;--tile2:#1f3860;--ink:#f2f6ff;--wall:#5b6482;--chip:#26375f}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Baloo 2",ui-rounded,"Comic Sans MS",system-ui,sans-serif}
+body{min-height:100%;display:flex;justify-content:center}
+main{width:100%;max-width:460px;padding:12px 14px 24px;display:flex;flex-direction:column;gap:12px}
+header{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+#fs,.nv{border:0;border-radius:12px;width:44px;height:44px;font-size:24px;background:var(--panel);color:var(--ink);cursor:pointer}
+h1{margin:0;font-size:26px;font-weight:800}
+.lv{font-size:18px;font-weight:800;background:var(--panel);padding:4px 12px;border-radius:14px}
+.dot{width:14px;height:14px;border-radius:50%;background:var(--panel);border:3px solid var(--panel)}
+.dot.done{background:#fbbf24;border-color:#fbbf24}.dot.cur{border-color:var(--rep)}
+#board{display:grid;grid-template-columns:repeat(var(--n,5),1fr);gap:5px;background:var(--panel);padding:8px;border-radius:22px;aspect-ratio:1;position:relative}
+.t{border-radius:12px;background:var(--tile);display:flex;align-items:center;justify-content:center;font-size:var(--fs,40px);position:relative}
+.t.b{background:var(--tile2)}
+.t.wall{background:var(--wall)}
+#bot{position:absolute;font-size:var(--fs,40px);transition:transform .35s ease;pointer-events:none;line-height:1}
+#bot.bump{animation:bump .4s}
+@keyframes bump{25%{transform:translateX(-6px) rotate(-8deg)}75%{transform:translateX(6px) rotate(8deg)}}
+.t{position:relative}
+#prog{min-height:76px;background:var(--panel);border-radius:18px;padding:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+#prog .ph{opacity:.45;font-size:18px;padding:0 6px}
+.chip{border:0;border-radius:12px;min-width:46px;height:46px;padding:0 8px;font:800 24px "Baloo 2",system-ui,sans-serif;color:#fff;cursor:pointer}
+.chip.on{outline:4px solid #fbbf24;transform:scale(1.12)}
+.u{background:var(--up)}.d{background:var(--down)}.l{background:var(--left)}.r{background:var(--right)}
+#pal{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+#pal .chip{height:62px;font-size:34px;border-radius:18px;box-shadow:0 4px 0 rgba(0,0,0,.18)}
+#pal .chip:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.18)}
+#reps{display:none;grid-template-columns:repeat(3,1fr);gap:8px}
+#reps.show{display:grid}
+#reps .chip{background:var(--rep);height:54px;font-size:24px;border-radius:18px;box-shadow:0 4px 0 rgba(0,0,0,.18)}
+#reps .chip.sel{outline:4px solid #fbbf24}
+#act{display:grid;grid-template-columns:1fr 2fr 1fr;gap:8px}
+#act button{border:0;border-radius:18px;height:64px;font:800 26px "Baloo 2",system-ui,sans-serif;cursor:pointer;background:var(--panel);color:var(--ink);box-shadow:0 4px 0 rgba(0,0,0,.15)}
+#go{background:var(--go)!important;color:#fff!important}
+button:focus-visible{outline:4px solid #fbbf24;outline-offset:2px}
+#win{position:fixed;inset:0;background:rgba(16,28,58,.72);display:none;align-items:center;justify-content:center;z-index:9}
+#win.show{display:flex}
+#win>div{background:var(--panel);border-radius:28px;padding:26px 30px;text-align:center;max-width:320px}
+#win .big{font-size:64px;line-height:1.1}
+#win h2{margin:6px 0 14px;font-size:30px}
+#win button{border:0;border-radius:18px;padding:12px 26px;font:800 28px "Baloo 2",system-ui,sans-serif;background:var(--go);color:#fff;cursor:pointer}
+#msg{text-align:center;font-size:20px;min-height:28px;font-weight:600}
+@media (prefers-reduced-motion:reduce){#bot{transition:none}#bot.bump{animation:none}}
+#fs,.nv{flex:none}.nv:disabled{opacity:.3;cursor:default}
+@media (max-width:520px){h1{font-size:21px}#fs,.nv{width:38px;height:38px;font-size:20px}.lv{font-size:16px;padding:4px 8px}}
+@media (min-width:700px){h1{font-size:34px}.lv{font-size:22px}.chip{min-width:58px;height:58px;font-size:30px}#pal .chip{height:84px;font-size:46px}#reps .chip{height:68px;font-size:30px}#act button{height:80px;font-size:32px}#prog{min-height:96px}#msg{font-size:26px}}
+@media (min-width:700px) and (orientation:landscape){main{max-width:none;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto auto auto auto 1fr;column-gap:24px;align-content:start;padding:14px 28px}header{grid-column:1/3}#board{grid-column:1;grid-row:2/7;width:min(100%,calc(100vh - 130px));width:min(100%,calc(100dvh - 130px));justify-self:center;align-self:start}#msg{grid-column:2;grid-row:2}#prog{grid-column:2;grid-row:3}#reps{grid-column:2;grid-row:4}#pal{grid-column:2;grid-row:5}#act{grid-column:2;grid-row:6;align-self:start}}
+@media (min-width:700px) and (orientation:portrait){main{max-width:780px}#board{width:min(100%,52vh);width:min(100%,52dvh);align-self:center}}
+</style>
+</head>
+<body>
+<main>
+<header><h1>🤖 Robo Path 2</h1><button class="nv" id="pv" aria-label="Previous level">‹</button><div class="lv" id="lv"></div><button class="nv" id="nl" aria-label="Next level">›</button><button id="fs" aria-label="Full screen" hidden>⛶</button></header>
+<div id="board" aria-label="Game board"></div>
+<div id="msg"></div>
+<div id="prog" aria-label="Your program"></div>
+<div id="reps"></div>
+<div id="pal"></div>
+<div id="act"><button id="undo" aria-label="Undo">⌫</button><button id="go">▶ Go!</button><button id="clr" aria-label="Clear all">🗑</button></div>
+</main>
+<div id="win"><div><div class="big" id="wb">🎉⭐🎉</div><h2 id="wt">You did it!</h2><button id="nx">Next ▶</button></div></div>
+<script>
+// Levels: s=start [row,col], g=goal, w=walls, max=most blocks allowed, rep=loops unlocked
+const L=[
+{s:[2,0],g:[2,2],w:[],max:6,m:'Get to the star! Tap the arrows.'},
+{s:[2,0],g:[2,4],w:[],max:8,m:'A longer walk.'},
+{s:[4,0],g:[2,2],w:[],max:8,m:'Go up, then right.'},
+{s:[0,0],g:[4,4],w:[],max:10,m:'Corner to corner!'},
+{s:[2,0],g:[2,4],w:[[2,2]],max:10,m:'A rock is in the way!'},
+{s:[0,0],g:[4,4],w:[],max:4,rep:1,m:'Pink blocks repeat! Tap 🔁 then an arrow.'},
+{s:[4,0],g:[0,4],w:[[4,1],[3,1],[2,1]],max:6,rep:1,m:'Find a way around.'},
+{s:[4,0],g:[0,4],w:[[2,2],[1,2],[3,3]],max:5,rep:1,m:'Use as few blocks as you can!'},
+{s:[4,0],g:[0,4],w:[],c:[[4,2]],max:6,rep:1,m:'Grab the coin 🪙 on the way to the star!'},
+{s:[0,0],g:[4,4],w:[[1,2]],c:[[0,2],[2,2]],max:9,rep:1,m:'Get both coins, then the star.'},
+{s:[2,0],g:[2,4],w:[[1,2],[2,2],[3,2]],c:[[0,2],[4,2]],max:9,rep:1,m:'A wall! Coins are above and below.'},
+{s:[4,0],g:[0,0],w:[[2,0],[2,1],[2,2]],c:[[0,4]],max:3,rep:1,m:'Only 3 blocks! Loops can help.'},
+{s:[0,0],g:[4,4],w:[],c:[[0,4],[4,0]],max:4,rep:1,m:'Two coins in two corners. 4 blocks!'},
+{s:[0,0],g:[4,4],w:[[1,0],[1,1],[1,2],[1,3],[3,1],[3,2],[3,3],[3,4]],c:[[2,2]],max:5,rep:1,m:'Follow the snake path.'},
+{s:[2,2],g:[0,0],w:[[1,3],[3,1]],c:[[0,4],[4,4],[4,0]],max:6,rep:1,m:'Collect all the corner coins!'},
+{s:[4,0],g:[0,4],w:[[1,1],[3,3],[1,3],[3,1]],c:[[0,0],[4,4],[2,2]],max:6,rep:1,m:'Final challenge! 3 coins, 6 blocks.'},
+{n:6,s:[5, 0],g:[0, 5],w:[],c:[[5,5]],max:4,rep:1,m:"Bigger board! Now 6 by 6."},
+{n:6,s:[0, 0],g:[5, 5],w:[[2,2],[2,3],[3,2],[3,3]],c:[[0,5],[5,0]],max:6,rep:1,m:"Two coins, far apart."},
+{n:6,s:[0, 0],g:[5, 5],w:[[1,0],[1,1],[1,2],[1,3],[1,4],[3,1],[3,2],[3,3],[3,4],[3,5]],c:[[2,2]],max:7,rep:1,m:"Follow the long snake."},
+{n:6,s:[3, 3],g:[5, 5],w:[[2,3],[4,2]],c:[[3,5],[0,5],[0,0],[5,0]],max:7,rep:1,m:"Spiral out and grab 4 coins!"},
+{n:6,s:[0, 0],g:[1, 1],w:[[1,2],[2,1]],c:[[0,5],[5,5],[5,0]],max:7,rep:1,m:"Go all the way around!"},
+{n:6,s:[5, 0],g:[0, 5],w:[[0,2],[1,2],[2,2],[3,2],[4,2],[1,4],[2,4],[3,4],[4,4],[5,4]],c:[[3,3]],max:5,rep:1,m:"Find the gaps in the walls."},
+{n:6,s:[0, 0],g:[5, 5],w:[[1,1],[2,2],[3,3],[4,4]],c:[[0,3],[3,0]],max:5,rep:1,m:"Rocks make a fence."},
+{n:6,s:[5, 5],g:[5, 3],w:[[1,1],[2,2],[3,3]],c:[[2,5],[0,0],[5,0]],max:5,rep:1,m:"Round trip! Plan first."},
+{n:7,s:[6, 0],g:[0, 6],w:[],c:[[6,6]],max:3,rep:1,m:"Welcome to 7 by 7!"},
+{n:7,s:[0, 0],g:[6, 6],w:[[3,1],[3,2],[3,3],[3,4],[3,5]],c:[[0,6],[6,0]],max:5,rep:1,m:"Use the gaps in the wall."},
+{n:7,s:[0, 0],g:[3, 3],w:[[2,2],[2,4],[4,2],[4,4]],c:[[0,6],[6,6],[6,0],[1,5]],max:7,rep:1,m:"Loop around, then go in."},
+{n:7,s:[6, 0],g:[0, 6],w:[[1,2],[2,2],[3,2],[4,2],[5,2],[6,2],[0,4],[1,4],[2,4],[3,4],[4,4],[5,4]],c:[[3,3],[3,5]],max:7,rep:1,m:"A big S-shaped maze."},
+{n:7,s:[3, 3],g:[2, 2],w:[[1,2],[3,2],[4,3],[2,4]],c:[[0,3],[3,6],[6,3],[3,0]],max:6,rep:1,m:"Circle the whole edge!"},
+{n:7,s:[0, 0],g:[6, 6],w:[[1,0],[1,1],[1,2],[1,3],[1,4],[1,5],[3,1],[3,2],[3,3],[3,4],[3,5],[3,6],[5,0],[5,1],[5,2],[5,3],[5,4],[5,5]],c:[[2,3],[4,3]],max:6,rep:1,m:"The longest snake yet!"},
+{n:7,s:[6, 0],g:[0, 0],w:[[2,2],[4,4],[2,4],[4,2]],c:[[6,6],[0,6],[3,3]],max:5,rep:1,m:"Three coins. Think ahead!"},
+{n:7,s:[6, 3],g:[0, 3],w:[[2,2],[4,2],[2,4],[4,4],[1,1],[5,5]],c:[[6,0],[6,6],[0,0],[0,6],[3,3]],max:6,rep:1,m:"Final boss! 5 coins!"}
+];
+const D={u:[-1,0,'⬆'],d:[1,0,'⬇'],l:[0,-1,'⬅'],r:[0,1,'➡']};
+let N=5,lvl=0,prog=[],pend=0,running=false,pos=[0,0],got=0,unlocked=0;
+const KEY='robopath2:v1';
+function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||'null');if(d&&Number.isInteger(d.u)){unlocked=Math.min(Math.max(d.u,0),L.length-1);lvl=Math.min(Math.max(+d.l||0,0),unlocked)}}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({u:unlocked,l:lvl}))}catch(e){}}
+function hud(){const n=(L[lvl].c||[]).length;$('lv').textContent='Level '+(lvl+1)+'/'+L.length+(n?'  🪙 '+got+'/'+n:'');$('pv').disabled=lvl==0;$('nl').disabled=lvl>=unlocked}
+function resetCoins(){got=0;(L[lvl].c||[]).forEach(x=>{$('board').children[x[0]*N+x[1]].textContent='🪙'});hud()}
+function collect(){const i=(L[lvl].c||[]).findIndex(x=>x[0]==pos[0]&&x[1]==pos[1]);
+ if(i>=0){const t=$('board').children[pos[0]*N+pos[1]];if(t.textContent=='🪙'){t.textContent='';got++;hud();beep(880,.15)}}}
+const $=id=>document.getElementById(id);
+let ac;function beep(f,d=.12){try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f;g.gain.value=.08;o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+d)}catch(e){}}
+function say(t){try{const u=new SpeechSynthesisUtterance(t);u.rate=.9;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}}
+function build(){
+ const c=L[lvl];N=c.n||5;running=false;prog=[];pend=0;pos=c.s.slice();
+ got=0;save();hud();
+ const b=$('board');b.innerHTML='';
+ $('board').style.setProperty('--n',N);
+ for(let r=0;r<N;r++)for(let k=0;k<N;k++){
+  const t=document.createElement('div');t.className='t'+((r+k)%2?' b':'');
+  if(c.w.some(w=>w[0]==r&&w[1]==k)){t.classList.add('wall');t.textContent='🪨'}
+  else if(c.g[0]==r&&c.g[1]==k)t.textContent='⭐';
+  else if((c.c||[]).some(x=>x[0]==r&&x[1]==k))t.textContent='🪙';
+  b.appendChild(t)}
+ const bot=document.createElement('div');bot.id='bot';bot.textContent='🤖';b.appendChild(bot);
+ place();
+ $('pal').innerHTML=Object.keys(D).map(k=>`<button class="chip ${k}" data-d="${k}" aria-label="${k}">${D[k][2]}</button>`).join('');
+ $('pal').querySelectorAll('button').forEach(x=>x.onclick=()=>add(x.dataset.d));
+ const R=$('reps');R.className=c.rep?'show':'';
+ R.innerHTML=c.rep?(N>=6?[2,3,4,5,6]:[2,3,4]).map(n=>`<button class="chip" data-n="${n}">🔁${n}</button>`).join(''):'';
+ R.style.gridTemplateColumns='repeat('+(N>=6?5:3)+',1fr)';
+ R.querySelectorAll('button').forEach(x=>x.onclick=()=>{const n=+x.dataset.n;pend=pend==n?0:n;R.querySelectorAll('button').forEach(y=>y.classList.toggle('sel',+y.dataset.n==pend))});
+ $('msg').textContent=c.m;render();
+}
+function place(){const bot=$('bot'),t=$('board').children[0];if(!t)return;const w=t.offsetWidth,g=5;$('board').style.setProperty('--fs',Math.floor(w*.62)+'px');
+ bot.style.left=t.offsetLeft+'px';bot.style.top=t.offsetTop+'px';bot.style.width=w+'px';bot.style.height=w+'px';
+ bot.style.display='flex';bot.style.alignItems='center';bot.style.justifyContent='center';
+ bot.style.transform=`translate(${pos[1]*(w+g)}px,${pos[0]*(w+g)}px)`}
+function render(cur=-1){
+ const p=$('prog');
+ if(!prog.length){p.innerHTML='<span class="ph">Your steps go here…</span>';return}
+ p.innerHTML=prog.map((x,i)=>`<button class="chip ${x.d} ${i==cur?'on':''}" data-i="${i}">${D[x.d][2]}${x.n>1?'×'+x.n:''}</button>`).join('');
+ p.querySelectorAll('button').forEach(b=>b.onclick=()=>{if(!running){prog.splice(+b.dataset.i,1);render()}});
+}
+function add(d){
+ if(running)return;const c=L[lvl];
+ if(prog.length>=c.max){$('msg').textContent='That is all the blocks! Try fewer.';beep(200);return}
+ prog.push({d,n:pend||1});pend=0;
+ $('reps').querySelectorAll('button').forEach(y=>y.classList.remove('sel'));
+ beep(500+prog.length*30,.08);render();
+}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function run(){
+ if(running||!prog.length)return;running=true;const c=L[lvl];
+ pos=c.s.slice();place();resetCoins();$('msg').textContent='';await sleep(300);
+ for(let i=0;i<prog.length;i++){
+  render(i);
+  for(let k=0;k<prog[i].n;k++){
+   const [dr,dc]=D[prog[i].d],nr=pos[0]+dr,nc=pos[1]+dc;
+   if(nr<0||nr>=N||nc<0||nc>=N||c.w.some(w=>w[0]==nr&&w[1]==nc)){
+    const b=$('bot');b.classList.add('bump');beep(160,.3);$('msg').textContent='Oops! Bump! Try again.';
+    await sleep(700);b.classList.remove('bump');pos=c.s.slice();place();resetCoins();render();running=false;return}
+   pos=[nr,nc];place();beep(600,.1);collect();await sleep(450);
+  }
+ }
+ render();
+ if(pos[0]==c.g[0]&&pos[1]==c.g[1]&&got==(c.c||[]).length){win()}
+ else{$('msg').textContent=(pos[0]==c.g[0]&&pos[1]==c.g[1])?'Grab all the coins first!':'Not at the star yet. Try again!';await sleep(900);pos=c.s.slice();place();resetCoins();running=false}
+}
+function win(){
+ [523,659,784,1047].forEach((f,i)=>setTimeout(()=>beep(f,.2),i*140));
+ const last=lvl==L.length-1;unlocked=Math.max(unlocked,Math.min(lvl+1,L.length-1));save();
+ $('wb').textContent=last?'🏆🤖🏆':'🎉⭐🎉';
+ $('wt').textContent=last?'You are a coder!':'You did it!';
+ $('nx').textContent=last?'Play again ↺':'Next ▶';
+ $('win').classList.add('show');say(last?'You are a super coder!':'Great job!');
+}
+$('nx').onclick=()=>{$('win').classList.remove('show');lvl=(lvl+1)%L.length;build()};
+$('go').onclick=run;
+$('pv').onclick=()=>{if(!running&&lvl>0){lvl--;build()}};
+$('nl').onclick=()=>{if(!running&&lvl<unlocked){lvl++;build()}};
+$('undo').onclick=()=>{if(!running){prog.pop();render()}};
+$('clr').onclick=()=>{if(!running){prog=[];pend=0;$('reps').querySelectorAll('button').forEach(y=>y.classList.remove('sel'));render()}};
+window.addEventListener('resize',place);
+const de=document.documentElement,fsb=$('fs');
+if(de.requestFullscreen||de.webkitRequestFullscreen)fsb.hidden=false;
+fsb.onclick=()=>{try{if(document.fullscreenElement||document.webkitFullscreenElement)(document.exitFullscreen||document.webkitExitFullscreen).call(document);else(de.requestFullscreen||de.webkitRequestFullscreen).call(de)}catch(e){}};
+['fullscreenchange','webkitfullscreenchange'].forEach(e=>document.addEventListener(e,()=>setTimeout(place,200)));
+load();build();
+</script>
+</body>
+</html>
